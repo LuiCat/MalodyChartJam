@@ -2,12 +2,15 @@
         
 def validate_chart(chart):
     if chart == None:
-        print("Invalid chart c%d" % cid)
+        print("Invalid chart c%d" % chart.cid)
         return False
 
     if chart.mode != "taiko":
-        print("Wrong mode [%s]" % chart.mode)
+        print("Wrong mode [%s] c%d" % (chart.mode, chart.cid))
         return False
+
+    if chart.state == "stable":
+        print("No stable chart c%d" % chart.cid)
         
     return True
 

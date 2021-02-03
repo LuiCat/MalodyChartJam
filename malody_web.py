@@ -152,6 +152,10 @@ def get_cid_list(uid, sid):
     return result
 
 
+def get_song_stat(sid):
+    return None
+
+
 def get_chart_stat(cid):
     response = request_text("http://m.mugzone.net/chart/%d" % cid)
     if response == None:
@@ -163,6 +167,7 @@ def get_chart_stat(cid):
         "<div class=\"tail\">\n"
         "<a href=\"/song/(\d+)\">Back to song</a>\n"
         "(?:.*\n)*"
+        "<em class=\"t\d\">([^<]*)</em>\n"
         "<span class=\"textfix artist\">([^<]*)</span> - ([^<]*)</h2>\n"
         "(?:.*\n)*"
         "<img src=\"/static/img/mode/mode-(\d).png\" />\n"
@@ -174,14 +179,15 @@ def get_chart_stat(cid):
     groups = match.groups("0")
 
     sid = int(groups[0])
-    artist = h2t(groups[1])
-    title = h2t(groups[2])
-    mode = mode_names[int(groups[3])]
-    diff = h2t(groups[4])
-    uid = int(groups[5])
-    author = h2t(groups[6])
+    state = groups[1].lower()
+    artist = h2t(groups[2])
+    title = h2t(groups[3])
+    mode = mode_names[int(groups[4])]
+    diff = h2t(groups[5])
+    uid = int(groups[6])
+    author = h2t(groups[7])
     print("%s - %s [%s] (%s)" % (artist, title, mode, diff))
-    print("s%d c%d, by %s (uid %d)" % (sid, cid, author, uid))
+    print("s%d c%d, by %s (uid %d), %s" % (sid, cid, author, uid, state))
 
     match = re.search(
         "<div class=\"[^\"]*like_area\">"
@@ -260,6 +266,7 @@ def get_chart_stat(cid):
         title = title,
         mode = mode,
         diff = diff,
+        state = state,
         hot = hot,
         rcmd = rcmd,
         unrcmd = unrcmd,
