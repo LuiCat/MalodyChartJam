@@ -45,10 +45,10 @@ def calculate_rankings_scoring(charts):
         rankings[chart.uid] = 0
     for chart in charts:
         score = 0
-        for supporter in chart.supporters:
-            if supporter.uid == chart.uid:
-                continue
-            score += supporter.gold
+        # for supporter in chart.supporters:
+        #     if supporter.uid == chart.uid:
+        #         continue
+        #     score += supporter.gold
         for recommend in chart.recommends:
             if recommend.uid == chart.uid:
                 continue
