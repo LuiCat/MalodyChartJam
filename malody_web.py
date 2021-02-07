@@ -12,13 +12,21 @@ import getmac
 from chart import *
 
 
-topic_index = 1330
+#topic_index = 1330 # for testing
+topic_index = 1344
 
 op_name = "LuiCat"
-op_uid = 122156
+op_uid = 8502
 op_psw = "1f145578899cd2a1c9f307df7d1ecd35"
 
+op_token = None
+op_cookies = None
+
+eid = 48
+
 time_script = int(time.time())
+
+ma_version = 4 * 0x10000 + 3 * 0x100 + 0
 
 
 def bkdr(s):
@@ -32,14 +40,24 @@ def h2t(html):
     return html2text.html2text(html).strip()
 
 def request_text(url):
-    response = requests.get(url, params = dict(t = time_script))
+    response = requests.get(
+        url, params = dict(t = time_script),
+        cookies = op_cookies,
+        headers = {
+            "Origin": "http://m.mugzone.net",
+            "Referer": "http://m.mugzone.net/index",
+            "X-CSRFToken": op_cookies["csrftoken"] if op_cookies is not None else None,
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    )
     print("GET %s" % response.url)
-    print()
     if response != None and response.ok:
+        print()
         return response.text
-    print("!!!!!!!!!! request failed !!!!!!!!!!")
-    print(response.text)
-    print("!!!!!!!!!! response above !!!!!!!!!!")
+    print("!!!!!!!!!! Request Failed: %s !!!!!!!!!!" % response.status_code)
+    #print(response.text)
+    #print("!!!!!!!!!! response above !!!!!!!!!!")
+    print()
     return None
 
 def request_json(url):
@@ -68,7 +86,10 @@ def request_talk_list(key):
 
     return talk_list
 
-def request_session():
+def request_session(force_update = False):
+    global op_cookies
+    if op_cookies is not None and not force_update:
+        return
     response = requests.get("http://m.mugzone.net/wiki/2119")
     if not response.ok:
         print("Cannot load wiki")
@@ -82,14 +103,15 @@ def request_session():
             "X-CSRFToken": response.cookies["csrftoken"],
             "X-Requested-With": "XMLHttpRequest"
         })
-    return response.cookies
+    op_cookies = response.cookies if "sessionid" in response.cookies else None
+    return op_cookies
 
-def request_token():
+def request_token(force_update = False):
+    global op_token
+    if op_token is not None and not force_update:
+        return
     url = "http://m.mugzone.net/cgi/login"
-    ma_version = 4 * 0x10000 + 3 * 0x100 + 0
     response = requests.post(url,
-        # data = "name=%s&psw=%s&v=%d&h=%s_0"
-        #     % (op_name, op_psw, ma_version, bkdr(getmac.get_mac_address())),
         data = {
             "name": op_name,
             "psw": op_psw,
@@ -98,9 +120,45 @@ def request_token():
         },
         headers = {
 	        "MaVersion": str(ma_version),
-	        "Referer": "http://m.mugzone.net"
+	        "Referer": "http://m.mugzone.net",
+            "X-Requested-With": "XMLHttpRequest"
         })
-    return json.loads(response.text)["data"]["key"] if response.ok else None
+    op_token = json.loads(response.text)["data"]["key"] if response.ok else None
+    return op_token
+
+def request_update_wiki(key, content):
+    request_session()
+    response = requests.post("http://m.mugzone.net/wiki/edit",
+        data = dict(key = "wiki_%s_1" % key, content = content),
+        cookies = op_cookies,
+        headers = {
+            "Origin": "http://m.mugzone.net",
+            "Referer": "http://m.mugzone.net/index",
+            "X-CSRFToken": op_cookies["csrftoken"],
+            "X-Requested-With": "XMLHttpRequest"
+        })
+    if not response.ok:
+        print("!!!!!!!!!! Wiki %d Update Failed: %s !!!!!!!!!!" % (key, response.status_code))
+    return response.ok
+
+def request_update_store(cids):
+    request_token()
+    response = requests.post("http://m.mugzone.net/cgi/chart/update",
+        params = dict(key = op_token, uid = op_uid),
+        data = dict(cid = ",".join(str(cid) for cid in cids)),
+        headers = {
+	        "MaVersion": str(ma_version),
+	        "Referer": "http://m.mugzone.net",
+            "X-Requested-With": "XMLHttpRequest"
+        })
+    if not response.ok:
+        print("!!!!!!!!!! Store Update Failed: %s !!!!!!!!!!" % response.status_code)
+        return False
+    obj = json.loads(response.text)
+    if "code" not in obj or obj["code"] != 0:
+        print("!!!!!!!!!! Store Update Failed, Code: %s !!!!!!!!!!" % obj["code"])
+        return False
+    return response.ok
 
 
 def get_submissions(header_index = 0, report_index = 1, submissions_start_index = 2):
@@ -111,7 +169,6 @@ def get_submissions(header_index = 0, report_index = 1, submissions_start_index 
         if index < submissions_start_index:
             continue
         content = h2t(reply["content"])
-        print("%s (uid %d): %s" % (reply["name"], reply["uid"], content))
 
         match = re.search("(?:s|song\/)(\d+)", content)
         if not match:
@@ -119,17 +176,50 @@ def get_submissions(header_index = 0, report_index = 1, submissions_start_index 
 
         sid = int(match.groups()[0])
         uid = reply["uid"]
-        submissions[uid] = sid
-        print("> uid%d: s%d" % (uid, sid))
+        author = reply["name"]
+        submissions[uid] = (sid, author)
+
+        print("%s (uid %d): s%d" % (author, uid, sid))
 
     print()
     return submissions
 
+def get_user_avatar(uid):
+    request_session()
+    response = request_text("http://m.mugzone.net/accounts/user/%d" % uid)
+    if response == None:
+        return None
 
-def get_cid_list(uid, sid):
+    match = re.search(
+        "<div class=\"coverb\">\n"
+        "<img src=\"([^\"]+)\"",
+        response
+    )
+    groups = match.groups()
+
+    return groups[0]
+
+def get_song_stat(sid):
     response = request_text("http://m.mugzone.net/song/%d" % sid)
     if response == None:
-        return []
+        return None
+
+    match = re.search(
+        "<h2 class=\"textfix title\"><span class=\"textfix artist\">([^<]*)</span> - ([^<]*)</h2>",
+        response
+    )
+    groups = match.groups("0")
+
+    artist = h2t(groups[0])
+    title = h2t(groups[1])
+
+    match = re.search(
+        "<div class=\"cover\" style=\"background-image:url\(([^)]+)\)\"></div>",
+        response
+    )
+    groups = match.groups()
+
+    cover = groups[0]
 
     matches = re.findall(
         "<h2 class=\"item\">"
@@ -142,18 +232,24 @@ def get_cid_list(uid, sid):
         response
     )
 
-    result = []
+    diffs = []
     for cid_s, uid_s in matches:
-        if int(uid_s) == uid:
-            result.append(int(cid_s))
-    print("s%d cid: %s" % (sid, result))
+        diffs.append(Chart(
+            sid = sid,
+            cid = int(cid_s),
+            uid = int(uid_s)
+        ))
 
+    print("%s - %s, s%d, %d diffs" % (artist, title, sid, len(diffs)))
     print()
-    return result
 
-
-def get_song_stat(sid):
-    return None
+    return Song(
+        sid = sid,
+        artist = artist,
+        title = title,
+        cover = cover,
+        diffs = diffs
+    )
 
 
 def get_chart_stat(cid):
@@ -170,7 +266,7 @@ def get_chart_stat(cid):
         "<em class=\"t\d\">([^<]*)</em>\n"
         "<span class=\"textfix artist\">([^<]*)</span> - ([^<]*)</h2>\n"
         "(?:.*\n)*"
-        "<img src=\"/static/img/mode/mode-(\d).png\" />\n"
+        "<img src=\"/static/img/mode/mode-(\d).png\".*\n"
         "<span>([^<]*)</span>(?:\n.*)*Created by:"
         ".*\n.*\n"
         "<a href=\"/accounts/user/(\d+)\">([^<]*)</a>",
@@ -186,8 +282,7 @@ def get_chart_stat(cid):
     diff = h2t(groups[5])
     uid = int(groups[6])
     author = h2t(groups[7])
-    print("%s - %s [%s] (%s)" % (artist, title, mode, diff))
-    print("s%d c%d, by %s (uid %d), %s" % (sid, cid, author, uid, state))
+    print("%s - %s [%s] (%s), s%d c%d, by %s (uid %d), %s" % (artist, title, mode, diff, sid, cid, author, uid, state))
 
     match = re.search(
         "<div class=\"[^\"]*like_area\">"
