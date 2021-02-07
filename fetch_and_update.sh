@@ -11,6 +11,10 @@ if [ ! -f "$file" ]; then
     exit
 fi
 
+echo "Starting SSH Agent..."
+eval `ssh-agent -s`
+ssh-add
+
 echo "Fetching updates from GitHub..."
 
 git fetch --all
