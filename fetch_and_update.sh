@@ -5,7 +5,7 @@ if [ $(date "+%Y") != 2021 ]; then
     exit
 fi
 
-file = update_$1.py
+file="update_$1.py"
 if [ ! -f "$file" ]; then
     echo "Script $file does not exist."
     exit
@@ -13,7 +13,7 @@ fi
 
 echo "Starting SSH Agent..."
 eval `ssh-agent -s`
-ssh-add
+ssh-add .ssh/cd
 
 echo "Fetching updates from GitHub..."
 
