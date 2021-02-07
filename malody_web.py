@@ -263,6 +263,7 @@ def get_chart_stat(cid):
         "<a href=\"/song/(\d+)\">Back to song</a>\n"
         "(?:.*\n)*"
         "<em class=\"t\d\">([^<]*)</em>\n"
+        "(?:.*\n)*"
         "<span class=\"textfix artist\">([^<]*)</span> - ([^<]*)</h2>\n"
         "(?:.*\n)*"
         "<img src=\"/static/img/mode/mode-(\d).png\".*\n"
