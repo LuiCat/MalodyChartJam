@@ -15,13 +15,14 @@ if request_session() is None:
     exit(0)
 else:
     print("I'm online!")
+print(flush=True)
 
 if request_token() is None:
     print("??")
     exit(0)
 else:
     print("I'm in-game online!")
-print()
+print(flush=True)
 
 
 charts = []

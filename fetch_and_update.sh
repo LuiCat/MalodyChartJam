@@ -11,13 +11,8 @@ if [ ! -f "$file" ]; then
     exit
 fi
 
-echo "Starting SSH Agent..."
-eval `ssh-agent -s`
-ssh-add ~/.ssh/cd
-
-echo "Fetching updates from GitHub..."
-git fetch --all
-git checkout -f origin/deployment
+echo "Deploying..."
+sh git_fetch_deployment.sh
 
 echo "Updating Python modules..."
 pip install pygtrie

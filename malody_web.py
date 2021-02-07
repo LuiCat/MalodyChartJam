@@ -51,12 +51,12 @@ def request_text(url):
     )
     print("GET %s" % response.url)
     if response != None and response.ok:
-        print()
+        print(flush=True)
         return response.text
     print("!!!!!!!!!! Request Failed: %s !!!!!!!!!!" % response.status_code)
     #print(response.text)
     #print("!!!!!!!!!! response above !!!!!!!!!!")
-    print()
+    print(flush=True)
     return None
 
 def request_json(url):
@@ -180,7 +180,7 @@ def get_submissions(header_index = 0, report_index = 1, submissions_start_index 
 
         print("%s (uid %d): s%d" % (author, uid, sid))
 
-    print()
+    print(flush=True)
     return submissions
 
 def get_user_avatar(uid):
@@ -240,7 +240,7 @@ def get_song_stat(sid):
         ))
 
     print("%s - %s, s%d, %d diffs" % (artist, title, sid, len(diffs)))
-    print()
+    print(flush=True)
 
     return Song(
         sid = sid,
@@ -312,7 +312,7 @@ def get_chart_stat(cid):
         supporters.append(Supporter(int(gold), int(uid_supporter)))
         print("uid%s supported %s gold" % (uid_supporter, gold))
     
-    print()
+    print(flush=True)
 
     comments = request_talk_list("chart_%s" % cid)
 
@@ -351,7 +351,7 @@ def get_chart_stat(cid):
             print("%s from %s (uid %d)" % (content.split(',')[0], commenter, uid_commenter))
             recommends.append(Recommend("Not" not in content, uid_commenter))
 
-    print()
+    print(flush=True)
     return Chart(
         cid = cid,
         sid = sid,
