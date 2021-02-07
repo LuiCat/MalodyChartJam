@@ -1,0 +1,2 @@
+0 * * 2 *    [[ $(date "+\%Y") == 2021 ]] && mkdir log && sh ~/MalodyChartJam/fetch_and_update.sh active >> "log/"$(date '+%Y%d%m-%H%M%S')".log"
+0 0 * 2 *    [[ $(date "+\%Y") == 2021 ]] && mkdir log && sh ~/MalodyChartJam/fetch_and_update.sh after >> "log/"$(date '+%Y%d%m-%H%M%S')".log"

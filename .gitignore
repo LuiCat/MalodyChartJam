@@ -1,3 +1,6 @@
 __pycache__/
 .vscode/
 history/
+log/
+*.pub
+*.ppk
