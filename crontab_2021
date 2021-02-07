@@ -1,2 +1,2 @@
-0 * * 2 *    [[ $(date "+\%Y") == 2021 ]] && cd ~/MalodyChartJam/ && mkdir -p log && sh fetch_and_update.sh active >> "log/"$(date '+%Y%d%m-%H%M%S')".log"
-0 0 * 3 *    [[ $(date "+\%Y") == 2021 ]] && cd ~/MalodyChartJam/ && mkdir -p log && sh fetch_and_update.sh after >> "log/"$(date '+%Y%d%m-%H%M%S')".log"
+0 * * 2 *    [[ $(date "+\%Y") == 2021 ]] && cd ~/MalodyChartJam/ && mkdir -p log && sh fetch_and_update.sh active > "log/"$(date '+\%Y\%d\%m-\%H\%M\%S')".log" 2> "log/"$(date '+\%Y\%d\%m-\%H\%M\%S')"-err.log"
+0 0 * 3 *    [[ $(date "+\%Y") == 2021 ]] && cd ~/MalodyChartJam/ && mkdir -p log && sh fetch_and_update.sh after > "log/"$(date '+\%Y\%d\%m-\%H\%M\%S')".log" 2> "log/"$(date '+\%Y\%d\%m-\%H\%M\%S')"-err.log"
