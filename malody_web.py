@@ -22,7 +22,7 @@ op_psw = "1f145578899cd2a1c9f307df7d1ecd35"
 op_token = None
 op_cookies = None
 
-eid = 48
+eid = 43
 
 time_script = int(time.time())
 
@@ -144,8 +144,8 @@ def request_update_wiki(key, content):
 def request_update_store(cids):
     request_token()
     response = requests.post("http://m.mugzone.net/cgi/chart/update",
-        params = dict(key = op_token, uid = op_uid),
-        data = dict(cid = ",".join(str(cid) for cid in cids)),
+        params = dict(uid = op_uid, key = op_token),
+        data = dict(eid = eid, cid = "[" + (",".join(str(cid) for cid in cids) + "]")),
         headers = {
 	        "MaVersion": str(ma_version),
 	        "Referer": "http://m.mugzone.net",
