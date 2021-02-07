@@ -59,7 +59,7 @@ def calculate_rankings_scoring(charts):
 def calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_scoring):
     rankings = {}
     for uid in rankings_kudos:
-        rankings[uid] = (2000 +                           # base increment
+        rankings[uid] = round(1000 +                      # base increment
             rankings_kudos[uid] * 1000 +                  # kudos
             rankings_popular[uid] * 1 +                   # popular
             max(0, 200 - rankings_popular[uid]) * 10 +    # discovery
