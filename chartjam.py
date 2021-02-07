@@ -111,15 +111,15 @@ def update_ranking(load_only):
     rankings_store_delta = calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_scoring)
 
     for uid, ranking_delta in rankings_store_delta.items():
-        if uid not in rankings_store:
-            rankings_store[uid] = 0
-        rankings_store[uid] += ranking_delta
+        if str(uid) not in rankings_store:
+            rankings_store[str(uid)] = 0
+        rankings_store[str(uid)] += ranking_delta
 
     rankings_store_number = number_of_chart_for_store(len(rankings_store))
     rankings_store_selected = dict(sorted(rankings_store.items(), key = lambda item: item[1], reverse = True)[:rankings_store_number])
     
     for uid in rankings_store_selected:
-        rankings_store[uid] = 0
+        rankings_store[str(uid)] = 0
     
     history_store["ranking"] = rankings_store
     history_store["delta"] = rankings_store_delta
