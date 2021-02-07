@@ -16,9 +16,13 @@ eval `ssh-agent -s`
 ssh-add ~/.ssh/cd
 
 echo "Fetching updates from GitHub..."
-
 git fetch --all
 git checkout -f origin/deployment
+
+echo "Updating Python modules..."
+pip install pygtrie
+pip install getmac
+pip install html2text
 
 echo "Updating Submissions..."
 
