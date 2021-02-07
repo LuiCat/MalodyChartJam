@@ -1,6 +1,5 @@
 import requests
 import json
-import regex
 import os
 import re
 import time

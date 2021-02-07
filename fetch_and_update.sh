@@ -13,7 +13,7 @@ fi
 
 echo "Starting SSH Agent..."
 eval `ssh-agent -s`
-ssh-add .ssh/cd
+ssh-add ~/.ssh/cd
 
 echo "Fetching updates from GitHub..."
 
