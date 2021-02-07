@@ -41,6 +41,6 @@ class Kudos:
 
 class Recommend:
     def __init__(self, upvote, uid):
-        self.inward = upvote
+        self.upvote = upvote
         self.uid = uid
 
