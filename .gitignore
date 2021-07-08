@@ -4,3 +4,4 @@ history/
 log/
 *.pub
 *.ppk
+recent_cron.log
