@@ -3,7 +3,11 @@ if [ $(date "+%Y") != 2021 ]; then
     exit
 fi
 
-cd ~/MalodyChartJam/
+script_path=$(readlink -f "$0")
+script_dir=$(dirname "$script_path")
+echo "Running in directory \`$script_dir'" >> recent_cron.log
+
+cd "$script_dir"
 mkdir -p log
 
 dt="$(date '+%Y%d%m-%H%M%S')"
