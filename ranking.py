@@ -6,11 +6,6 @@ def validate_chart(chart):
         print()
         return False
 
-    if chart.mode != "taiko":
-        print("Wrong mode [%s] c%d" % (chart.mode, chart.cid))
-        print()
-        return False
-
     if chart.state == "stable":
         print("No stable chart c%d" % chart.cid)
         print()

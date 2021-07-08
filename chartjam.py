@@ -80,7 +80,7 @@ def update_history(load_only):
         save_history("submission", history_submission, dts)
 
     wiki_text = wiki_submission_history(dt, history_submission)
-    request_update_wiki(2133, wiki_text)
+    request_update_wiki(wiki_text)
 
 
 def update_ranking(load_only):

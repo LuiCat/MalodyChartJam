@@ -12,16 +12,17 @@ from chart import *
 
 
 #topic_index = 1330 # for testing
-topic_index = 1344
+topic_index = -1
 
 op_name = "LuiCat"
 op_uid = 8502
-op_psw = "1f145578899cd2a1c9f307df7d1ecd35"
+op_psw = "1f145578899cd2a1c9f307df7d1ecd35" # :)
 
 op_token = None
 op_cookies = None
 
-eid = 43
+eid = -1
+wiki_id = -1
 
 time_script = int(time.time())
 
@@ -63,6 +64,10 @@ def request_json(url):
     return json.loads(request_text(url))
 
 def request_talk_list(key):
+    if topic_index == -1:
+        print("!!!!!!!!!! Topic Thread ID Not Configured !!!!!!!!!!")
+        return None
+
     talk_list = []
     latest_time = 0
     
@@ -125,10 +130,13 @@ def request_token(force_update = False):
     op_token = json.loads(response.text)["data"]["key"] if response.ok else None
     return op_token
 
-def request_update_wiki(key, content):
+def request_update_wiki(content):
+    if wiki_id == -1:
+        print("Skipped wiki update.")
+        return True
     request_session()
     response = requests.post("http://m.mugzone.net/wiki/edit",
-        data = dict(key = "wiki_%s_1" % key, content = content),
+        data = dict(key = "wiki_%s_1" % wiki_id, content = content),
         cookies = op_cookies,
         headers = {
             "Origin": "http://m.mugzone.net",
@@ -141,6 +149,9 @@ def request_update_wiki(key, content):
     return response.ok
 
 def request_update_store(cids):
+    if eid == -1:
+        print("Skipped store update.")
+        return True
     request_token()
     response = requests.post("http://m.mugzone.net/cgi/chart/update",
         params = dict(uid = op_uid, key = op_token),
