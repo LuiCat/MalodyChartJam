@@ -18,6 +18,8 @@ def load_history(name):
     return json.load(open(filename)) if os.path.exists(filename) else {}
 
 def save_history(name, history, backup_suffix = None):
+    if not os.path.exists(history_dir):
+        os.mkdir(history_dir)
     filename = os.path.join(history_dir, "%s.json" % name)
     json.dump(history, open(filename, "w"))
     if backup_suffix is not None:
