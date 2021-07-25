@@ -7,3 +7,5 @@ ssh-add ~/.ssh/cd
 echo "Fetching updates from GitHub..."
 git fetch --all
 git checkout -f origin/deployment
+
+eval `ssh-agent -k`
