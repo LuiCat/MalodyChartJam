@@ -12,15 +12,17 @@ from chart import *
 
 
 #topic_index = 1330 # for testing
-topic_index = -1
+topic_index = 1703
 
 op_name = "LuiCat"
 op_uid = 8502
 op_psw = "1f145578899cd2a1c9f307df7d1ecd35" # :)
 
 eid = -1
-wiki_id = [-1, 2157]  # [rank, log]
-
+wiki_id = {
+    "rank": 2158,
+    "log": 2157,
+}
 
 
 op_token = None
@@ -133,11 +135,12 @@ def request_token(force_update = False):
     op_token = json.loads(response.text)["data"]["key"] if response.ok else None
     return op_token
 
-def request_update_wiki(index, content):
-    if index not in wiki_id or wiki_id[index] == -1:
+def request_update_wiki(page, content):
+    print("Updating wiki page \"%s\" in %s" % (page, wiki_id))
+    if (page not in wiki_id) or (wiki_id[page] == -1):
         print("Skipped wiki update.")
         return True
-    key = wiki_id[index]
+    key = wiki_id[page]
     request_session()
     response = requests.post("http://m.mugzone.net/wiki/edit",
         data = dict(key = "wiki_%s_1" % key, content = content),
@@ -185,17 +188,19 @@ def get_submissions(submissions_start_index = 2):
         content = h2t(reply["content"])
 
         match_team = re.search("^(?:T|t)eam[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
-        match_song = re.search("^(?:S|s)ong[ \t]*(?:\:|：).*(?:s|song\/|sid ?)(\d+)", content, re.MULTILINE)
+        match_song = re.search("^(?:S|s)ong[ \t]*(?:\:|：)[^\d\n]*(\d+)", content, re.MULTILINE)
         match_member = re.search("^(?:M|m)ember(?:s)?[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
         match_intro = re.search("^(?:I|i)ntro[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
 
         if not match_song or not match_team or not match_member:
             continue
 
-        name = match_team.groups()[0]
+        name = match_team.groups()[0].strip()
         sid = int(match_song.groups()[0])
         uids = [int(uid) for uid in re.findall('[0-9]+', match_member.groups()[0])]
-        meta = match_intro.groups()[0] if match_intro else None
+        meta = match_intro.groups()[0].strip() if match_intro else None
+
+        if meta is not None and len(meta) > 15: meta = meta[:15] + "..."
 
         submissions.append(Submission(
             name = name,

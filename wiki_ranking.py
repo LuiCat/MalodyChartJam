@@ -2,27 +2,76 @@ from history import *
 from wiki_common import *
 
 
-def line_ranking_table(detail, ranking):
+def line_ranking_table(detail, *rankings):
     cells = [
         image_url(detail["cover"], 100) + "@newline" + link_song(detail),
-        image_url(detail["avatar"], 100) + "@newline" + link_user(detail),
+        line_team(detail),
         "@newline".join(links_charts(detail)),
-        str(ranking)
     ]
+    cells.extend([str(ranking) for ranking in rankings])
     return "| " + " | ".join(cells) + " |"
 
-def block_ranking_table(ranking_title, details, rankings, hidden = True):
+def block_ranking_table_store(title, details, rankings, rankings_delta, hidden = True):
     lines = [
-        "== " + ranking_title + " ==",
+        "== " + title + " ==",
         "#hidden" if hidden else "",
         "|-",
-        "|! Song | Chart Creator | Charts | Ranking Score |"
+        "|! Song | Team | Charts | Ranking Rate (Delta) |"
     ]
-    uid_sorted = sorted(rankings.keys(), key = lambda uid: rankings[uid], reverse = True)
-    for uid in uid_sorted:
-        lines.append(line_ranking_table(details[str(uid)], rankings[uid]))
+    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
+    for sid in sid_sorted:
+        detail = details[sid]
+        lines.append(line_ranking_table(detail, "%s (%s)" % (rankings[sid], rankings_delta[sid])))
     lines.append("#end" if hidden else "")
     return "\n".join(lines)
+
+def block_ranking_table_kudos(title, details, rankings, hidden = True):
+    lines = [
+        "== " + title + " ==",
+        "#hidden" if hidden else "",
+        "|-",
+        "|! Song | Team | Charts | Kudos In/Out | Score |"
+    ]
+    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
+    for sid in sid_sorted:
+        detail = details[str(sid)]
+        lines.append(line_ranking_table(detail,
+            str(detail["kudos_in"]) + "/" + str(detail["kudos_out"]),
+            rankings[sid]))
+    lines.append("#end" if hidden else "")
+    return "\n".join(lines)
+
+def block_ranking_table_popular(title, details, rankings, hidden = True):
+    lines = [
+        "== " + title + " ==",
+        "#hidden" if hidden else "",
+        "|-",
+        "|! Song | Team | Charts | Hot | Re/Un | Comments | Score |"
+    ]
+    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
+    for sid in sid_sorted:
+        detail = details[str(sid)]
+        lines.append(line_ranking_table(detail,
+            str(detail["hot"]),
+            str(detail["re"]) + "/" + str(detail["un"]),
+            str(detail["comments"]),
+            rankings[sid]))
+    lines.append("#end" if hidden else "")
+    return "\n".join(lines)
+
+def block_ranking_table_score(title, details, rankings, hidden = True):
+    lines = [
+        "== " + title + " ==",
+        "#hidden" if hidden else "",
+        "|-",
+        "|! Song | Team | Charts | Score |"
+    ]
+    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
+    for sid in sid_sorted:
+        lines.append(line_ranking_table(details[str(sid)], rankings[sid]))
+    lines.append("#end" if hidden else "")
+    return "\n".join(lines)
+
 
 
 """

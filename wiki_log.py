@@ -40,7 +40,7 @@ def line_submission_team_member_change_check(detail_old, detail):
     for author in detail_old["authors"]:
         if s[author["uid"]] == True:
             return line_submission_team_member_change(detail)
-    return None
+    return []
 
 def lines_submission_diff(detail_old, detail, cid):
     result = []

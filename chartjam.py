@@ -33,6 +33,8 @@ def fetch_submissions():
     submissions = get_submissions()
     for submission in submissions:
         song = get_song_stat(submission.sid)
+        if song is None:
+            continue
 
         authors = []
         for uid in submission.uids:
@@ -50,10 +52,10 @@ def fetch_submissions():
         }
 
         for diff in song.diffs:
-            if diff.uid != uid:
+            if not validate_diff(diff, submission):
                 continue
             chart = get_chart_stat(diff.cid)
-            if validate_chart(chart):
+            if validate_chart(chart, submission):
                 charts.append(chart)
 
                 detail["cids"].append(chart.cid)
@@ -92,7 +94,7 @@ def update_history(load_only):
         save_history("submission", history_submission, dts)
 
     wiki_text = wiki_submission_history(dt, history_submission)
-    request_update_wiki(1, wiki_text)
+    request_update_wiki("log", wiki_text)
 
 
 def update_ranking(load_only):
@@ -107,9 +109,17 @@ def update_ranking(load_only):
         rankings_scoring = history_submission["latest"]["scoring"]
 
     else:
-        rankings_kudos = calculate_rankings_kudos(charts)
-        rankings_popular = calculate_rankings_popular(charts)
-        rankings_scoring = calculate_rankings_scoring(charts)
+        sids = []
+        uid_to_sid = {}
+        for _, detail in details.items():
+            for author in detail["authors"]:
+                if detail["sid"] not in sids:
+                    sids.append(detail["sid"])
+                uid_to_sid[author["uid"]] = detail["sid"]
+
+        rankings_kudos = calculate_rankings_kudos(charts, sids, uid_to_sid)
+        rankings_popular = calculate_rankings_popular(charts, sids)
+        rankings_scoring = calculate_rankings_scoring(charts, sids)
         history_ranking = {
             "latest": {
                 "kudos": rankings_kudos,
@@ -123,34 +133,34 @@ def update_ranking(load_only):
     rankings_store = history_store.get("ranking") or {}
     rankings_store_delta = calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_scoring)
 
-    for sid, ranking_delta in rankings_store_delta.items():
-        if str(sid) not in rankings_store:
-            rankings_store[str(sid)] = 0
-        rankings_store[str(sid)] += ranking_delta
+    for ranking_key, ranking_delta in rankings_store_delta.items():
+        if ranking_key not in rankings_store:
+            rankings_store[ranking_key] = 0
+        rankings_store[ranking_key] += ranking_delta
 
     rankings_store_number = number_of_chart_for_store(len(rankings_store))
     rankings_store_selected = dict(sorted(rankings_store.items(), key = lambda item: item[1], reverse = True)[:rankings_store_number])
     
-    for sid in rankings_store_selected:
-        rankings_store[str(sid)] = 0
+    for ranking_key in rankings_store_selected:
+        rankings_store[ranking_key] = 0
     
     history_store["ranking"] = rankings_store
     history_store["delta"] = rankings_store_delta
     save_history("store", history_store, dts)
 
     wiki_blocks = [
-        block_ranking_table("Current In Store", details, rankings_store_selected, False),
-        block_ranking_table("Kudos Ranking", details, rankings_kudos),
-        block_ranking_table("Popular Ranking", details, rankings_popular),
-        block_ranking_table("Scoring Ranking", details, rankings_scoring),
+        block_ranking_table_store("Currently In Store", details, rankings_store_selected, rankings_store_delta, False),
+        block_ranking_table_kudos("Kudos Ranking", details, rankings_kudos),
+        block_ranking_table_popular("Popular Ranking", details, rankings_popular),
+        block_ranking_table_score("Scoring Ranking", details, rankings_scoring),
     ]
     
     wiki_text = "\n\n".join(wiki_blocks)
-    request_update_wiki(0, wiki_text)
+    request_update_wiki("rank", wiki_text)
 
     store_cids = []
-    for sid in rankings_store_selected:
-        store_cids.extend(details[str(sid)]["cids"])
+    for ranking_key in rankings_store_selected:
+        store_cids.extend(details[ranking_key]["cids"])
 
     request_update_store(store_cids)
 
