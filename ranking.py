@@ -5,7 +5,7 @@ def validate_diff(diff, submission):
 def validate_chart(chart, submission):
     if not validate_chart_rule_sancheck(chart): return False
     if not validate_chart_rule_banlist(chart): return False
-#    if not validate_chart_rule_nonstable(chart): return False
+    if not validate_chart_rule_nonstable(chart): return False
     return True
 
 

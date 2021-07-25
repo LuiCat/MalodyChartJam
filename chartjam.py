@@ -133,6 +133,10 @@ def update_ranking(load_only):
     rankings_store = history_store.get("ranking") or {}
     rankings_store_delta = calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_scoring)
 
+    for ranking_key in list(rankings_store.keys()):
+        if ranking_key not in rankings_store_delta:
+            rankings_store.pop(ranking_key)
+
     for ranking_key, ranking_delta in rankings_store_delta.items():
         if ranking_key not in rankings_store:
             rankings_store[ranking_key] = 0
