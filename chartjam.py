@@ -31,13 +31,21 @@ details = {}
 
 def fetch_submissions():
     submissions = get_submissions()
-    for uid, (sid, author) in submissions.items():
-        song = get_song_stat(sid)
-        avatar = get_user_avatar(uid)
+    for submission in submissions:
+        song = get_song_stat(submission.sid)
+
+        authors = []
+        for uid in submission.uids:
+            user = get_user_stat(uid)
+            authors.append({
+                "name": user.name,
+                "uid": user.uid,
+                "avatar": user.avatar,
+            })
 
         detail = {
-            "name": "%s - %s" % (song.artist, song.title), "author": author, "cover": song.cover, "avatar": avatar,
-            "uid": uid, "sid": sid, "cids": [], "diffs": {},
+            "name": "%s - %s" % (song.artist, song.title), "authors": authors, "cover": song.cover, "team": submission.name, "meta": submission.meta,
+            "sid": song.sid, "cids": [], "diffs": {}, "mids": [],
             "hot": 0, "gold": 0, "re": 0, "un": 0, "comments": 0, "kudos_in": 0, "kudos_out": 0
         }
 
@@ -49,7 +57,10 @@ def fetch_submissions():
                 charts.append(chart)
 
                 detail["cids"].append(chart.cid)
-                detail["diffs"][str(chart.cid)] = chart.diff
+                if chart.mid not in detail["mids"]:
+                    detail["mids"].append(chart.mid)
+
+                detail["diffs"][str(chart.cid)] = chart.diff + " (" + chart.mode + ")"
 
                 detail["hot"] += chart.hot
                 for supporter in chart.supporters:
@@ -63,9 +74,10 @@ def fetch_submissions():
                         detail["kudos_in"] += 1
                     else:
                         detail["kudos_out"] += 1
-                
-        details[str(uid)] = detail
-
+        
+        detail_key = str(song.sid)
+        details[detail_key] = detail
+    return details
 
 def update_history(load_only):
     history_submission = load_history("submission")
@@ -80,7 +92,7 @@ def update_history(load_only):
         save_history("submission", history_submission, dts)
 
     wiki_text = wiki_submission_history(dt, history_submission)
-    request_update_wiki(wiki_text)
+    request_update_wiki(1, wiki_text)
 
 
 def update_ranking(load_only):
@@ -111,16 +123,16 @@ def update_ranking(load_only):
     rankings_store = history_store.get("ranking") or {}
     rankings_store_delta = calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_scoring)
 
-    for uid, ranking_delta in rankings_store_delta.items():
-        if str(uid) not in rankings_store:
-            rankings_store[str(uid)] = 0
-        rankings_store[str(uid)] += ranking_delta
+    for sid, ranking_delta in rankings_store_delta.items():
+        if str(sid) not in rankings_store:
+            rankings_store[str(sid)] = 0
+        rankings_store[str(sid)] += ranking_delta
 
     rankings_store_number = number_of_chart_for_store(len(rankings_store))
     rankings_store_selected = dict(sorted(rankings_store.items(), key = lambda item: item[1], reverse = True)[:rankings_store_number])
     
-    for uid in rankings_store_selected:
-        rankings_store[str(uid)] = 0
+    for sid in rankings_store_selected:
+        rankings_store[str(sid)] = 0
     
     history_store["ranking"] = rankings_store
     history_store["delta"] = rankings_store_delta
@@ -134,16 +146,11 @@ def update_ranking(load_only):
     ]
     
     wiki_text = "\n\n".join(wiki_blocks)
-    request_update_wiki(2134, wiki_text)
+    request_update_wiki(0, wiki_text)
 
     store_cids = []
-    for uid in rankings_store_selected:
-        store_cids.extend(details[str(uid)]["cids"])
+    for sid in rankings_store_selected:
+        store_cids.extend(details[str(sid)]["cids"])
 
     request_update_store(store_cids)
 
-
-
-
-# todo: randomly select charts for store, and save the total selected count as a file
-# todo: ban list

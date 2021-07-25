@@ -14,6 +14,7 @@ class Chart:
         self.cid = None,
         self.sid = None,
         self.uid = None,
+        self.mid = None,
         self.author = None,
         self.artist = None,
         self.title = None,
@@ -27,6 +28,21 @@ class Chart:
         self.comments_count = 0,
         self.recommends = [],
         self.kudos = [],
+        self.__dict__.update({ k: v for k,v in kwargs.items() if k in self.__dict__ })
+
+class User:
+    def __init__(self, **kwargs):
+        self.uid = None,
+        self.name = None,
+        self.avatar = None,
+        self.__dict__.update({ k: v for k,v in kwargs.items() if k in self.__dict__ })
+
+class Submission:
+    def __init__(self, **kwargs):
+        self.name = None,
+        self.sid = None,
+        self.uids = [],
+        self.meta = None,
         self.__dict__.update({ k: v for k,v in kwargs.items() if k in self.__dict__ })
 
 class Supporter:

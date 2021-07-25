@@ -18,11 +18,13 @@ op_name = "LuiCat"
 op_uid = 8502
 op_psw = "1f145578899cd2a1c9f307df7d1ecd35" # :)
 
+eid = -1
+wiki_id = [-1, 2157]  # [rank, log]
+
+
+
 op_token = None
 op_cookies = None
-
-eid = -1
-wiki_id = -1
 
 time_script = int(time.time())
 
@@ -61,7 +63,8 @@ def request_text(url):
     return None
 
 def request_json(url):
-    return json.loads(request_text(url))
+    text = request_text(url)
+    return json.loads(text) if text is not None else None
 
 def request_talk_list(key):
     if topic_index == -1:
@@ -130,13 +133,14 @@ def request_token(force_update = False):
     op_token = json.loads(response.text)["data"]["key"] if response.ok else None
     return op_token
 
-def request_update_wiki(content):
-    if wiki_id == -1:
+def request_update_wiki(index, content):
+    if index not in wiki_id or wiki_id[index] == -1:
         print("Skipped wiki update.")
         return True
+    key = wiki_id[index]
     request_session()
     response = requests.post("http://m.mugzone.net/wiki/edit",
-        data = dict(key = "wiki_%s_1" % wiki_id, content = content),
+        data = dict(key = "wiki_%s_1" % key, content = content),
         cookies = op_cookies,
         headers = {
             "Origin": "http://m.mugzone.net",
@@ -171,8 +175,8 @@ def request_update_store(cids):
     return response.ok
 
 
-def get_submissions(header_index = 0, report_index = 1, submissions_start_index = 2):
-    submissions = {}
+def get_submissions(submissions_start_index = 2):
+    submissions = []
     talk_list = request_talk_list("topic_%s" % topic_index)
 
     for index, reply in enumerate(talk_list):
@@ -180,34 +184,55 @@ def get_submissions(header_index = 0, report_index = 1, submissions_start_index 
             continue
         content = h2t(reply["content"])
 
-        match = re.search("(?:s|song\/)(\d+)", content)
-        if not match:
+        match_team = re.search("^(?:T|t)eam[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
+        match_song = re.search("^(?:S|s)ong[ \t]*(?:\:|：).*(?:s|song\/|sid ?)(\d+)", content, re.MULTILINE)
+        match_member = re.search("^(?:M|m)ember(?:s)?[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
+        match_intro = re.search("^(?:I|i)ntro[ \t]*(?:\:|：)(.+)", content, re.MULTILINE)
+
+        if not match_song or not match_team or not match_member:
             continue
 
-        sid = int(match.groups()[0])
-        uid = reply["uid"]
-        author = reply["name"]
-        submissions[uid] = (sid, author)
+        name = match_team.groups()[0]
+        sid = int(match_song.groups()[0])
+        uids = [int(uid) for uid in re.findall('[0-9]+', match_member.groups()[0])]
+        meta = match_intro.groups()[0] if match_intro else None
 
-        print("%s (uid %d): s%d" % (author, uid, sid))
+        submissions.append(Submission(
+            name = name,
+            sid = sid,
+            uids = uids,
+            meta = meta
+        ))
+
+        print("team %s (uid %s): s%d" % (name, uids, sid))
+        if meta: print("intro: " + meta)
 
     print(flush=True)
     return submissions
 
-def get_user_avatar(uid):
+def get_user_stat(uid):
     request_session()
     response = request_text("http://m.mugzone.net/accounts/user/%d" % uid)
     if response == None:
         return None
 
-    match = re.search(
+    match_name = re.search(
+        "<p class=\"name\">\n"
+        "<span>([^<]*)</span>",
+        response
+    )
+
+    match_avatar = re.search(
         "<div class=\"coverb\">\n"
         "<img src=\"([^\"]+)\"",
         response
     )
-    groups = match.groups()
 
-    return groups[0]
+    return User(
+        uid = uid,
+        name = match_name.groups()[0] if match_name else None,
+        avatar = match_avatar.groups()[0] if match_avatar else None,
+    )
 
 def get_song_stat(sid):
     response = request_text("http://m.mugzone.net/song/%d" % sid)
@@ -289,7 +314,8 @@ def get_chart_stat(cid):
     state = groups[1].lower()
     artist = h2t(groups[2])
     title = h2t(groups[3])
-    mode = mode_names[int(groups[4])]
+    mid = int(groups[4])
+    mode = mode_names[mid]
     diff = h2t(groups[5])
     uid = int(groups[6])
     author = h2t(groups[7])
@@ -367,6 +393,7 @@ def get_chart_stat(cid):
         cid = cid,
         sid = sid,
         uid = uid,
+        mid = mid,
         author = author,
         artist = artist,
         title = title,
