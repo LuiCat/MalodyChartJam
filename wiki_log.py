@@ -35,11 +35,11 @@ def line_submission_team_member_change_check(detail_old, detail):
         s[author["uid"]] = True
     for author in detail["authors"]:
         if author["uid"] not in s:
-            return line_submission_team_member_change(detail)
+            return [line_submission_team_member_change(detail)]
         s[author["uid"]] = False
     for author in detail_old["authors"]:
         if s[author["uid"]] == True:
-            return line_submission_team_member_change(detail)
+            return [line_submission_team_member_change(detail)]
     return []
 
 def lines_submission_diff(detail_old, detail, cid):
