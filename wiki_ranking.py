@@ -2,6 +2,13 @@ from history import *
 from wiki_common import *
 
 
+def iter_sid_detail(details, rankings):
+    sid_to_key = {}
+    for key, detail in details.items():
+        sid_to_key[str(detail["sid"])] = key
+    return [(sid, details[sid_to_key[sid]]) for sid in sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)]
+
+
 def line_ranking_table(detail, *rankings):
     cells = [
         image_url(detail["cover"], 100) + "@newline" + link_song(detail),
@@ -18,9 +25,7 @@ def block_ranking_table_store(title, details, rankings, rankings_delta, hidden =
         "|-",
         "|! Song | Team | Charts | Ranking Rate (Delta) |"
     ]
-    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
-    for sid in sid_sorted:
-        detail = details[sid]
+    for sid, detail in iter_sid_detail(details, rankings):
         lines.append(line_ranking_table(detail, "%s (%s)" % (rankings[sid], rankings_delta[sid])))
     lines.append("#end" if hidden else "")
     return "\n".join(lines)
@@ -32,9 +37,7 @@ def block_ranking_table_kudos(title, details, rankings, hidden = True):
         "|-",
         "|! Song | Team | Charts | Kudos In/Out | Score |"
     ]
-    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
-    for sid in sid_sorted:
-        detail = details[str(sid)]
+    for sid, detail in iter_sid_detail(details, rankings):
         lines.append(line_ranking_table(detail,
             str(detail["kudos_in"]) + "/" + str(detail["kudos_out"]),
             rankings[sid]))
@@ -48,9 +51,7 @@ def block_ranking_table_popular(title, details, rankings, hidden = True):
         "|-",
         "|! Song | Team | Charts | Hot | Re/Un | Comments | Score |"
     ]
-    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
-    for sid in sid_sorted:
-        detail = details[str(sid)]
+    for sid, detail in iter_sid_detail(details, rankings):
         lines.append(line_ranking_table(detail,
             str(detail["hot"]),
             str(detail["re"]) + "/" + str(detail["un"]),
@@ -66,9 +67,8 @@ def block_ranking_table_score(title, details, rankings, hidden = True):
         "|-",
         "|! Song | Team | Charts | Score |"
     ]
-    sid_sorted = sorted(rankings.keys(), key = lambda sid: rankings[sid], reverse = True)
-    for sid in sid_sorted:
-        lines.append(line_ranking_table(details[str(sid)], rankings[sid]))
+    for sid, detail in iter_sid_detail(details, rankings):
+        lines.append(line_ranking_table(detail, rankings[sid]))
     lines.append("#end" if hidden else "")
     return "\n".join(lines)
 

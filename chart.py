@@ -39,6 +39,7 @@ class User:
 
 class Submission:
     def __init__(self, **kwargs):
+        self.index = None,
         self.name = None,
         self.sid = None,
         self.uids = [],

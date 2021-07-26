@@ -203,6 +203,7 @@ def get_submissions(submissions_start_index = 2):
         if meta is not None and len(meta) > 15: meta = meta[:15] + "..."
 
         submissions.append(Submission(
+            index = reply["num"],
             name = name,
             sid = sid,
             uids = uids,

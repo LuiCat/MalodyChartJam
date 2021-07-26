@@ -77,7 +77,7 @@ def fetch_submissions():
                     else:
                         detail["kudos_out"] += 1
         
-        detail_key = str(song.sid)
+        detail_key = str(submission.index)
         details[detail_key] = detail
     return details
 
@@ -163,8 +163,8 @@ def update_ranking(load_only):
     request_update_wiki("rank", wiki_text)
 
     store_cids = []
-    for ranking_key in rankings_store_selected:
-        store_cids.extend(details[ranking_key]["cids"])
+    for _, detail in iter_sid_detail(details, rankings_store_selected):
+        store_cids.extend(detail["cids"])
 
     request_update_store(store_cids)
 
