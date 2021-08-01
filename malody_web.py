@@ -12,13 +12,13 @@ from chart import *
 
 
 #topic_index = 1330 # for testing
-topic_index = 1703
+topic_index = 1724
 
 op_name = "LuiCat"
 op_uid = 8502
 op_psw = "1f145578899cd2a1c9f307df7d1ecd35" # :)
 
-eid = -1
+eid = 56
 wiki_id = {
     "rank": 2158,
     "log": 2157,
