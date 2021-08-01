@@ -1,5 +1,7 @@
-0 * 26-28 7 *    sh ~/MalodyChartJam/cron.sh active
-0 * 29-31 7 *    sh ~/MalodyChartJam/cron.sh after
+0 * 26-28 7 *    sh ~/monf_cj/cron.sh active
+0 * 29-31 7 *    sh ~/monf_cj/cron.sh after
 
-0 *    4-21  8 *    sh ~/MalodyChartJam/cron.sh active
-0 0,12 22-30 8 *   sh ~/MalodyChartJam/cron.sh after
+0 * 2-30 8  *   sh ~/monf_cj/cron.sh active
+0 * *    9  *   sh ~/monf_cj/cron.sh active
+0 * 1-5  10 *   sh ~/monf_cj/cron.sh active
+0 * 6-16 10 *   sh ~/monf_cj/cron.sh after

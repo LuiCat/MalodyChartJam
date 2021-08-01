@@ -27,11 +27,12 @@ def validate_chart_rule_nonstable(chart):
     return True
 
 
-def calculate_rankings_kudos(charts, sids, uid_to_sid):
+def calculate_rankings_kudos(charts, sids, members):
     rankings = dict.fromkeys([str(sid) for sid in sids], 0)
     for chart in charts:
         for kudos in chart.kudos:
-            kudos_sid = uid_to_sid[kudos.uid]
+            member = members[str(kudos.uid)]
+            kudos_sid = member["sid"]
             if kudos_sid in rankings:
                 rankings[str(chart.sid if kudos.inward else kudos_sid)] += 1
     return rankings

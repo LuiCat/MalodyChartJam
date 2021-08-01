@@ -1,5 +1,6 @@
 def link_user(user):
-    return "[http://m.mugzone.net/accounts/user/%d %s]" % (user["uid"], user["name"])
+    link = "[http://m.mugzone.net/accounts/user/%d %s]" % (user["uid"], user["name"])
+    return "--" + link + "--" if "effective" in user and not user["effective"] else link
 
 def link_song(detail):
     return "[http://m.mugzone.net/song/%d %s]" % (detail["sid"], detail["name"])

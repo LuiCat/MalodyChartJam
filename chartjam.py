@@ -1,4 +1,5 @@
 from datetime import datetime
+from random import random
 
 from malody_web import *
 from chart import *
@@ -25,8 +26,13 @@ else:
 print(flush=True)
 
 
+# I don't know how to eliminate these static states.
+# To eliminate them, we need also to decouple
+# update_history() and update_ranking() from them and each other.
+
 charts = []
-details = {}
+details = {}  # str(sid) -> submission dict
+members = {}  # str(uid) -> member dict
 
 
 def fetch_submissions():
@@ -43,9 +49,11 @@ def fetch_submissions():
                 "name": user.name,
                 "uid": user.uid,
                 "avatar": user.avatar,
+                "effective": False,
             })
 
         detail = {
+            "index": submission.index,
             "name": "%s - %s" % (song.artist, song.title), "authors": authors, "cover": song.cover, "team": submission.name, "meta": submission.meta,
             "sid": song.sid, "cids": [], "diffs": {}, "mids": [],
             "hot": 0, "gold": 0, "re": 0, "un": 0, "comments": 0, "kudos_in": 0, "kudos_out": 0
@@ -79,6 +87,55 @@ def fetch_submissions():
         
         detail_key = str(submission.index)
         details[detail_key] = detail
+
+    members = load_history("member")
+    for member in members.values():
+        member["submissions_active"] = []  # start fresh on active submissions
+
+    for _, detail in details.items():
+        for author in detail["authors"]:
+            submission_index = detail["index"]
+            sid = detail["sid"]
+            uid = author["uid"]
+            member_key = str(uid)
+
+            member = members[member_key] if member_key in members else {
+                "uid": uid,
+                "sid": None,
+                "submission": None,
+                "submissions_active": [],
+                "submissions_allpast": [],
+                "switch_count": 0,
+            }
+
+            if member["submission"] is None:
+                member["submission"] = submission_index
+                member["sid"] = sid
+
+            if submission_index not in member["submissions_active"]:
+                member["submissions_active"].append(submission_index)
+            if submission_index not in member["submissions_allpast"]:
+                member["submissions_allpast"].append(submission_index)
+
+            members[member_key] = member
+
+    # check if member dropped from the effective team
+    for member in members.values():
+        if len(member["submissions_active"]) == 0:
+            member["submission"] = None
+            member["sid"] = None
+        elif member["submission"] not in member["submissions_active"]:
+            member["submission"] = random.choice(member["submissions_active"])
+            member["sid"] = details[str(member["submission"])]["sid"]
+            member["switch_count"] += 1
+
+    for _, detail in details.items():
+        for author in detail["authors"]:
+            if members[str(author["uid"])]["submission"] == detail["index"]:
+                author["effective"] = True
+
+    save_history("member", members, dts)
+    
     return details
 
 def update_history(load_only):
@@ -110,14 +167,12 @@ def update_ranking(load_only):
 
     else:
         sids = []
-        uid_to_sid = {}
         for _, detail in details.items():
-            for author in detail["authors"]:
-                if detail["sid"] not in sids:
-                    sids.append(detail["sid"])
-                uid_to_sid[author["uid"]] = detail["sid"]
+            sid = detail["sid"]
+            if sid not in sids:
+                sids.append(sid)
 
-        rankings_kudos = calculate_rankings_kudos(charts, sids, uid_to_sid)
+        rankings_kudos = calculate_rankings_kudos(charts, sids, members)
         rankings_popular = calculate_rankings_popular(charts, sids)
         rankings_scoring = calculate_rankings_scoring(charts, sids)
         history_ranking = {
