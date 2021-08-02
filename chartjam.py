@@ -70,7 +70,7 @@ def fetch_submissions():
                 if chart.mid not in detail["mids"]:
                     detail["mids"].append(chart.mid)
 
-                detail["diffs"][str(chart.cid)] = chart.diff + " (" + chart.mode + ")"
+                detail["diffs"][str(chart.cid)] = chart.diff + " (" + chart.mode.capitalize() + ")"
 
                 detail["hot"] += chart.hot
                 for supporter in chart.supporters:
