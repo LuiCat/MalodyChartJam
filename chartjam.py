@@ -136,7 +136,7 @@ def fetch_submissions():
 
     save_history("member", members, dts)
     
-    return details
+    return details, members
 
 def update_history(load_only):
     history_submission = load_history("submission")

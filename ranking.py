@@ -31,13 +31,18 @@ def calculate_rankings_kudos(charts, sids, members):
     rankings = dict.fromkeys([str(sid) for sid in sids], 0)
     for chart in charts:
         for kudos in chart.kudos:
-            member_key = str(kudos.uid)
-            if member_key not in members:
-                continue
-            member = members[str(kudos.uid)]
-            kudos_sid = member["sid"]
-            if kudos_sid in rankings:
-                rankings[str(chart.sid if kudos.inward else kudos_sid)] += 1
+            if kudos.inward:
+                ranking_key = str(chart.sid)
+                if ranking_key in rankings:
+                    rankings[ranking_key] += 1
+            else:
+                member_key = str(kudos.uid)
+                if member_key not in members:
+                    continue
+                member = members[str(kudos.uid)]
+                ranking_key = str(member["sid"])
+                if ranking_key in rankings:
+                    rankings[ranking_key] += 1
     return rankings
 
 
