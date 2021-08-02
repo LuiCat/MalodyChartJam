@@ -18,7 +18,7 @@ op_name = "LuiCat"
 op_uid = 8502
 op_psw = "1f145578899cd2a1c9f307df7d1ecd35" # :)
 
-eid = 56
+eid = 51
 wiki_id = {
     "rank": 2158,
     "log": 2157,
