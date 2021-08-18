@@ -79,4 +79,5 @@ def calculate_rankings_store_delta(rankings_kudos, rankings_popular, rankings_sc
     return rankings
 
 def number_of_chart_for_store(charts_count):
-    return min(8, round((charts_count + 0.1) / 2))
+    #return min(8, round((charts_count + 0.1) / 2))
+    return charts_count
